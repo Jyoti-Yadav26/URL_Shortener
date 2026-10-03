@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/Jyoti-Yadav26/URL_Shortener/internal/model"
 )
 
 // TestURLRepository exercises Insert and GetByCode against a real Postgres.
@@ -49,7 +51,15 @@ func TestURLRepository(t *testing.T) {
 	})
 
 	t.Run("insert returns the stored row", func(t *testing.T) {
-		got, err := repo.Insert(ctx, code, target)
+		id, err := repo.NextID(ctx)
+		if err != nil {
+			t.Fatalf("NextID: %v", err)
+		}
+		if id == 0 {
+			t.Error("NextID returned 0, want a sequence value")
+		}
+
+		got, err := repo.Insert(ctx, model.URL{ID: int64(id), Code: code, TargetURL: target})
 		if err != nil {
 			t.Fatalf("Insert: %v", err)
 		}
@@ -78,7 +88,12 @@ func TestURLRepository(t *testing.T) {
 	})
 
 	t.Run("duplicate code is rejected", func(t *testing.T) {
-		_, err := repo.Insert(ctx, code, target)
+		id, err := repo.NextID(ctx)
+		if err != nil {
+			t.Fatalf("NextID: %v", err)
+		}
+
+		_, err = repo.Insert(ctx, model.URL{ID: int64(id), Code: code, TargetURL: target})
 		if !errors.Is(err, ErrDuplicateCode) {
 			t.Errorf("Insert duplicate error = %v, want ErrDuplicateCode", err)
 		}

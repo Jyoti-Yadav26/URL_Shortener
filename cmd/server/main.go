@@ -16,6 +16,7 @@ import (
 	"github.com/Jyoti-Yadav26/URL_Shortener/internal/config"
 	"github.com/Jyoti-Yadav26/URL_Shortener/internal/handler"
 	"github.com/Jyoti-Yadav26/URL_Shortener/internal/repository"
+	"github.com/Jyoti-Yadav26/URL_Shortener/internal/service"
 )
 
 func main() {
@@ -41,10 +42,16 @@ func run(logger *slog.Logger) error {
 	defer pool.Close()
 	logger.Info("connected to postgres")
 
+	urls := handler.NewURLHandler(service.New(repository.NewURLRepository(pool)), cfg.BaseURL)
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Recoverer)
+	r.Use(handler.RequestLogger(logger))
+	r.Use(handler.Recoverer(logger))
+
 	r.Get("/health", handler.Health)
+	r.Post("/shorten", urls.Shorten)
+	r.Get("/{code}", urls.Redirect)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

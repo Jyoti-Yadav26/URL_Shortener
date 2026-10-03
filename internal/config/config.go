@@ -6,6 +6,8 @@ import "os"
 type Config struct {
 	Port        string
 	DatabaseURL string
+	// BaseURL prefixes the short_url returned by POST /shorten.
+	BaseURL string
 }
 
 // Load reads configuration from the environment, falling back to defaults
@@ -15,6 +17,7 @@ func Load() Config {
 		Port: env("PORT", "8080"),
 		// Default points at the Postgres in deploy/docker-compose.yml.
 		DatabaseURL: env("DATABASE_URL", "postgres://shortener:shortener@localhost:5435/shortener?sslmode=disable"),
+		BaseURL:     env("BASE_URL", "http://localhost:8080"),
 	}
 }
 
