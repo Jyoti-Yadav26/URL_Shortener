@@ -1,0 +1,14 @@
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build output
+/bin/
+*.exe
+
+# Test and coverage output
+*.out
+coverage.*
