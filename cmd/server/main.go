@@ -15,6 +15,7 @@ import (
 
 	"github.com/Jyoti-Yadav26/URL_Shortener/internal/config"
 	"github.com/Jyoti-Yadav26/URL_Shortener/internal/handler"
+	"github.com/Jyoti-Yadav26/URL_Shortener/internal/repository"
 )
 
 func main() {
@@ -29,6 +30,17 @@ func main() {
 func run(logger *slog.Logger) error {
 	cfg := config.Load()
 
+	// Cancelled on Ctrl+C or SIGTERM (what `docker stop` sends).
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	pool, err := repository.NewPool(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	logger.Info("connected to postgres")
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
@@ -39,10 +51,6 @@ func run(logger *slog.Logger) error {
 		Handler:           r,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-
-	// Cancelled on Ctrl+C or SIGTERM (what `docker stop` sends).
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	errCh := make(chan error, 1)
 	go func() {

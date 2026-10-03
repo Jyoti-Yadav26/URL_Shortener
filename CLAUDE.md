@@ -31,6 +31,8 @@ Once the phase works and `go test ./...` passes:
 2. Commit with a descriptive message.
 3. Push to `origin main`.
 
+Commit messages must not include Co-Authored-By or any Claude attribution.
+
 Never commit `.env` files, credentials, keys, or any other secrets. If a
 phase needs a secret, it goes in `.env` (gitignored) with a committed
 `.env.example` holding placeholder values.
